@@ -1,10 +1,10 @@
-# Contributing to Your TurboWarp Extension
+# Contributing to your Turbowarp extension
 
 This guide explains how to add features and blocks to your TurboWarp extension.
 
-## Adding Your First Block
+## Adding your first block
 
-### 1. Define the Block in `getInfo()`
+### 1. Define the block in `getInfo()`
 
 Edit `src/01-core.js` and add a block definition to the `getInfo()` method:
 
@@ -31,7 +31,7 @@ getInfo() {
 }
 ```
 
-### 2. Implement the Block Method
+### 2. Implement the block method
 
 Add the method to your extension class:
 
@@ -41,7 +41,7 @@ sayHello(args) {
 }
 ```
 
-### 3. Build and Test
+### 3. Build and test
 
 ```bash
 npm run build
@@ -49,15 +49,15 @@ npm run build
 
 Load the extension in TurboWarp and test the new block!
 
-## Block Types
+## Block types
 
 Scratch/TurboWarp supports different block types:
 
-- `'reporter'` - Returns a value (green)
-- `'command'` - Performs an action (blue)
-- `'boolean'` - Returns true/false (pink)
-- `'hat'` - Event block (red, caps)
-- `'conditional'` - Conditional block (orange)
+- 'reporter' - Returns a value (green)
+- 'command' - Performs an action (blue)
+- 'boolean' - Returns true/false (pink)
+- 'hat' - Event block (red, caps)
+- 'conditional' - Conditional block (orange)
 
 Example:
 
@@ -73,7 +73,7 @@ Example:
 }
 ```
 
-## Block Arguments
+## Block arguments
 
 Scratch supports multiple argument types:
 
@@ -104,7 +104,7 @@ ENABLED: {
 }
 ```
 
-### Dropdowns (Menus)
+### Dropdowns (menus)
 
 ```javascript
 COLOR: {
