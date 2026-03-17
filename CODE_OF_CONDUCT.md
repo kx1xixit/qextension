@@ -1,5 +1,6 @@
-diverse, inclusive, and healthy community.
 # Contributor covenant code of conduct
+
+Welcome! We are committed to making participation in our community a harassment-free experience for everyone, and pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
 ## Our pledge
 
