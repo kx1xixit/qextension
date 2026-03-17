@@ -1,5 +1,3 @@
-
-
 # Quick start guide
 
 Get up and running with your TurboWarp extension in 5 minutes!
