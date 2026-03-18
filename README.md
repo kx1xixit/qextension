@@ -135,7 +135,7 @@ Customize your extension metadata in `src/manifest.json`:
   "version": "1.0.0",
   "description": "What does my extension do?",
   "author": "Your Name",
-  "licence": "MIT"
+  "licence": "LSL-1.0"
 }
 ```
 
