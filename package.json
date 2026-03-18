@@ -1,5 +1,6 @@
 {
   "type": "module",
+  // cspell:ignore turbowarp
   "name": "turbowarp-extension-template",
   "version": "1.0.0",
   "description": "A template for TurboWarp/Scratch extensions with CI/CD workflows",

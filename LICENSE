@@ -1,3 +1,4 @@
+// cspell:ignore xixit
 Lighthouse Software License (LSL)
 Version 1.0
 
@@ -38,6 +39,7 @@ You may not use The Software to knowingly engage in the following prohibited act
 a. Unauthorized Access: Gaining unauthorized access to computer systems, networks, or data (hacking).
 b. Malware Deployment: Creating or distributing ransomware, spyware, viruses, worms, or trojans.
 c. Denial of Service: Conducting denial-of-service (DoS) or distributed denial-of-service (DDoS) attacks.
+// cspell:ignore exfiltration
 d. Surveillance: Conducting mass surveillance or data exfiltration without user consent.
 Exception for Research: These restrictions do not apply to defensive security research, penetration testing, or system administration conducted with explicit authorization from the target system's owner.
 

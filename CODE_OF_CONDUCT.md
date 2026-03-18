@@ -45,6 +45,8 @@ Instances of abusive, harassing, or otherwise unacceptable behavior may be repor
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
+<!-- cspell:ignore xixit -->
+
 ## Enforcement guidelines
 
 Community leaders will follow these community impact guidelines in determining the consequences for any action they deem in violation of this code of conduct:

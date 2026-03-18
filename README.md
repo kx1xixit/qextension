@@ -1,8 +1,9 @@
 # TurboWarp extension template (`qextension`)
+<!-- cspell:ignore qextension KXEC occured licence Licence -->
 
 > [!CAUTION]
 >
-> `qextension` has recently switched to the LSL (Lighthouse Software License), as it has superseded KXEC. While not many legal changes have occured, it's important to check the license again if you plan on re-releasing or contributing to `qextension`.
+> `qextension` has recently switched to the LSL (Lighthouse Software License), as it has superseded KXEC. While not many legal changes have occurred, it's important to check the license again if you plan on re-releasing or contributing to `qextension`.
 
 A template repository for creating TurboWarp/Scratch extensions with CI/CD workflows and automated builds.
 
@@ -135,7 +136,7 @@ Customize your extension metadata in `src/manifest.json`:
   "version": "1.0.0",
   "description": "What does my extension do?",
   "author": "Your Name",
-  "licence": "LSL-1.0"
+  "license": "LSL-1.0"
 }
 ```
 
@@ -146,7 +147,7 @@ The metadata is automatically inserted into the extension header:
 // ID: myExtension
 // Description: What does my extension do?
 // By: Your Name
-// Licence: MIT
+// License: MIT
 // Version 1.0.0
 ```
 
