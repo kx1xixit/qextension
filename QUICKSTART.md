@@ -35,16 +35,6 @@ Blocks are defined in `src/01-core.js` (for block definitions) and implemented i
 
 **a. Add the block definition to `getInfo()` in `src/01-core.js`:**
 
-```js
-{
-	opcode: 'sayHello',
-	blockType: 'reporter',
-	text: 'say hello to [NAME]',
-	arguments: {
-		NAME: { type: 'string', defaultValue: 'world' }
-	}
-},
-```
 
 **b. Implement the block in `src/02-example-module.js`:**
 
