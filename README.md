@@ -1,4 +1,4 @@
-# Turbowarp extension template
+# TurboWarp extension template (`qextension`)
 
 A template repository for creating TurboWarp/Scratch extensions with CI/CD workflows and automated builds.
 

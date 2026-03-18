@@ -1,4 +1,4 @@
-# Contributing to your Turbowarp extension
+# Contributing to your TurboWarp extension
 
 This guide explains how to add features and blocks to your TurboWarp extension.
 
