@@ -1,4 +1,5 @@
 # TurboWarp extension template (`qextension`)
+
 <!-- cspell:ignore qextension KXEC occured licence Licence -->
 
 > [!CAUTION]
