@@ -1,5 +1,9 @@
 # TurboWarp extension template (`qextension`)
 
+> [!CAUTION]
+>
+> `qextension` has recently switched to the LSL (Lighthouse Software License), as it has superseded KXEC. While not many legal changes have occured, it's important to check the license again if you plan on re-releasing or contributing to `qextension`.
+
 A template repository for creating TurboWarp/Scratch extensions with CI/CD workflows and automated builds.
 
 ## Features
