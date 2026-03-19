@@ -4,8 +4,8 @@
  * Load this first (01-* naming convention)
  */
 
-// Import colorBlock from 02-example-module.js
-import { colorBlock } from './02-example-module.js';
+// Import colorBlock and sayHello from 02-example-module.js
+import { colorBlock, sayHello as sayHelloImpl } from './02-example-module.js';
 
 class TurboWarpExtension {
   constructor() {
@@ -57,7 +57,24 @@ class TurboWarpExtension {
             },
           },
         },
+        {
+          opcode: 'sayHello',
+          blockType: 'reporter',
+          text: 'say hello to [NAME]',
+          arguments: {
+            NAME: {
+              type: 'string',
+              defaultValue: 'world',
+            },
+          },
+        },
       ],
+      /**
+       * Block implementation: Say Hello (delegates to 02-example-module.js)
+       */
+      sayHello(args) {
+        return sayHelloImpl(args);
+      }
     };
   }
 

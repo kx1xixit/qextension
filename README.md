@@ -2,9 +2,10 @@
 
 <!-- cspell:ignore qextension KXEC occured licence Licence -->
 
+
 > [!CAUTION]
 >
-> `qextension` has recently switched to the LSL (Lighthouse Software License), as it has superseded KXEC. While not many legal changes have occurred, it's important to check the license again if you plan on re-releasing or contributing to `qextension`.
+> `qextension` has recently switched to the LSL (Lighthouse Software License), which supersedes KXEC. This project uses the LSL (see LICENSE). If you plan to contribute or redistribute, please review the LICENSE file for details before contributing or re-releasing.
 
 A template repository for creating TurboWarp/Scratch extensions with CI/CD workflows and automated builds.
 
@@ -148,7 +149,7 @@ The metadata is automatically inserted into the extension header:
 // ID: myExtension
 // Description: What does my extension do?
 // By: Your Name
-// License: MIT
+// License: LSL-1.0
 // Version 1.0.0
 ```
 
@@ -234,9 +235,12 @@ This template includes example code. To see it in action:
 3. Look for "My Extension" in the extensions menu
 4. Use the example blocks
 
+
 ## License
 
-MIT
+Lighthouse Software License (LSL-1.0)
+
+This project is licensed under the Lighthouse Software License (LSL), Version 1.0. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
