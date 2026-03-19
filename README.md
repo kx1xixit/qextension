@@ -1,6 +1,6 @@
 # TurboWarp extension template (`qextension`)
 
-<!-- cspell:ignore qextension KXEC licence Licence -->
+<!-- cspell:ignore qextension KXEC -->
 
 > [!CAUTION]
 >
