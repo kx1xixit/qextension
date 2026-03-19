@@ -1,9 +1,9 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Supported versions
 
 Only the `main` branch is actively protected.
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
-Report vulnerability with GitHub's built-in vulnerability reporting features.
+Report vulnerabilities using GitHub's built-in vulnerability reporting features.

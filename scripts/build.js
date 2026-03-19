@@ -154,7 +154,7 @@ async function buildExtension() {
         compress: true,
         mangle: true,
         format: {
-          comments: /^\s*(Name|ID|Description|By|License|Version):/, 
+          comments: /^\s*(Name|ID|Description|By|License|Version):/,
         },
       });
 

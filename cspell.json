@@ -1,12 +1,6 @@
 {
   "version": "0.2",
   "language": "en",
-  "files": [
-    "docs/**/*.md",
-    "docs/**/*.txt"
-  ],
-  "ignorePaths": [
-    "node_modules",
-    "dist"
-  ]
+  "files": ["docs/**/*.md", "docs/**/*.txt"],
+  "ignorePaths": ["node_modules", "dist", "package.json", "package-lock.json"]
 }

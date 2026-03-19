@@ -1,4 +1,10 @@
 /**
+ * Say Hello block implementation
+ */
+export function sayHello(args) {
+  return `Hello, ${args.NAME || 'world'}!`;
+}
+/**
  * Example Module - Add your extension features here
  *
  * To add blocks to your extension:

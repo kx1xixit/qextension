@@ -1,18 +1,24 @@
-# TurboWarp Extension Template
+# TurboWarp extension template (`qextension`)
 
-A template repository for creating **TurboWarp/Scratch extensions** with CI/CD workflows and automated builds.
+<!-- cspell:ignore qextension KXEC -->
+
+> [!CAUTION]
+>
+> `qextension` has recently switched to the LSL (Lighthouse Software License), which supersedes KXEC. This project uses the LSL (see LICENSE). If you plan to contribute or redistribute, please review the LICENSE file for details before contributing or re-releasing.
+
+A template repository for creating TurboWarp/Scratch extensions with CI/CD workflows and automated builds.
 
 ## Features
 
-- **Modular Architecture**: Organize your extension code into separate files
-- **Automated Build System**: Combines multiple JS files from `/src/` into a single extension bundle
-- **CI/CD Workflows**: GitHub Actions for building, testing, and releasing
-- **Watch Mode**: Development mode with automatic rebuilding on file changes
-- **Linting & Formatting**: ESLint and Prettier pre-configured
-- **Release Automation**: Automatic release creation with build artifacts
-- **Scratch Extension Format**: Ready for TurboWarp or Scratch 3.0+ environments
+- Modular architecture: Organize your extension code into separate files
+- Automated build system: Combines multiple JS files from `/src/` into a single extension bundle
+- CI/CD workflows: GitHub Actions for building, testing, and releasing
+- Watch mode: Development mode with automatic rebuilding on file changes
+- Linting and formatting: ESLint and Prettier pre-configured
+- Release automation: Automatic release creation with build artifacts
+- Scratch extension format: Ready for TurboWarp or Scratch 3.0+ environments
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
@@ -56,7 +62,7 @@ npm run lint
 npm run format
 ```
 
-## Project Structure
+## Project structure
 
 ```
 ├── src/
@@ -71,27 +77,27 @@ npm run format
 └── Configuration files
 ```
 
-## How It Works
+## How it works
 
-### File Loading Order
+### File loading order
 
-Files in `src/` are loaded in **alphabetical order** by the build script. Use numbered prefixes to control load order:
+Files in `src/` are loaded in alphabetical order by the build script. Use numbered prefixes to control load order:
 
 - `01-core.js` - Main extension class (loaded first, must have `getInfo()` and block methods)
 - `02-helpers.js` - Helper functions and utilities
 - `03-utils.js` - Additional utilities
 - etc.
 
-### Extension Structure
+### Extension structure
 
 The generated `extension.js` includes:
 
-1. **Extension Header**: Generated from `src/manifest.json`
-2. **IIFE Wrapper**: `(function (Scratch) { ... })(Scratch)`
-3. **All Source Files**: Concatenated in alphabetical order
-4. **Extension Registration**: `Scratch.extensions.register(new YourExtension())`
+1. Extension header: Generated from `src/manifest.json`
+2. IIFE wrapper: `(function (Scratch) { ... })(Scratch)`
+3. All source files: Concatenated in alphabetical order
+4. Extension registration: `Scratch.extensions.register(new YourExtension())`
 
-### Creating Blocks
+### Creating blocks
 
 Add blocks to your extension's `getInfo()` method:
 
@@ -131,7 +137,7 @@ Customize your extension metadata in `src/manifest.json`:
   "version": "1.0.0",
   "description": "What does my extension do?",
   "author": "Your Name",
-  "licence": "MIT"
+  "license": "LSL-1.0"
 }
 ```
 
@@ -142,7 +148,7 @@ The metadata is automatically inserted into the extension header:
 // ID: myExtension
 // Description: What does my extension do?
 // By: Your Name
-// Licence: MIT
+// License: LSL-1.0
 // Version 1.0.0
 ```
 
@@ -230,7 +236,9 @@ This template includes example code. To see it in action:
 
 ## License
 
-MIT
+Lighthouse Software License (LSL-1.0)
+
+This project is licensed under the Lighthouse Software License (LSL), Version 1.0. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
