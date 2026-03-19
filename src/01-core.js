@@ -71,14 +71,7 @@ class TurboWarpExtension {
       ],
     };
   }
-   }
 
-   /**
-    * Block implementation: Say Hello (delegates to 02-example-module.js)
-    */
-   sayHello(args) {
-     return sayHelloImpl(args);
-   }
   /**
    * Block implementation: Say Hello (delegates to 02-example-module.js)
    */

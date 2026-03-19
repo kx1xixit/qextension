@@ -2,7 +2,6 @@
 
 <!-- cspell:ignore qextension KXEC licence Licence -->
 
-
 > [!CAUTION]
 >
 > `qextension` has recently switched to the LSL (Lighthouse Software License), which supersedes KXEC. This project uses the LSL (see LICENSE). If you plan to contribute or redistribute, please review the LICENSE file for details before contributing or re-releasing.
@@ -234,7 +233,6 @@ This template includes example code. To see it in action:
 2. Load `build/extension.js` into TurboWarp
 3. Look for "My Extension" in the extensions menu
 4. Use the example blocks
-
 
 ## License
 
