@@ -121,17 +121,43 @@ async function buildExtension() {
     // Close IIFE
     output += '})(Scratch);\n';
 
-    // Write standard output
-    fs.writeFileSync(OUTPUT_FILE, output, 'utf8');
+    // Optionally strip comments in production mode (preserve the header)
+    let finalOutput = output;
+    if (productionMode) {
+      try {
+        const { minify } = await import('terser');
+        // Use terser to remove comments while keeping header metadata comments
+        const cleaned = await minify(output, {
+          compress: false,
+          mangle: false,
+          format: {
+            comments: /^\s*(Name|ID|Description|By|License|Version):/,
+            beautify: true,
+          },
+        });
+        if (cleaned && typeof cleaned.code === 'string') {
+          finalOutput = cleaned.code;
+        }
+      } catch (err) {
+        if (err && err.code === 'ERR_MODULE_NOT_FOUND') {
+          console.warn('        (Skipping comment stripping: "terser" not found)');
+        } else {
+          console.warn('[PROD] Comment stripping failed:', err);
+        }
+      }
+    }
 
-    const size = (output.length / 1024).toFixed(2);
+    // Write standard output
+    fs.writeFileSync(OUTPUT_FILE, finalOutput, 'utf8');
+
+    const size = (finalOutput.length / 1024).toFixed(2);
     console.log(`[NORMAL] Standard build successful: ${OUTPUT_FILE} (${size} KB)`);
 
     // --- Maximization Step (Prettier) ---
     try {
       const { format, resolveConfig } = await import('prettier');
       const prettierConfig = (await resolveConfig(OUTPUT_MAX_FILE)) || {};
-      const formatted = await format(output, {
+      const formatted = await format(finalOutput, {
         ...prettierConfig,
         parser: 'babel',
       });
@@ -150,7 +176,7 @@ async function buildExtension() {
     // --- Minification Step (Terser) ---
     try {
       const { minify } = await import('terser');
-      const minified = await minify(output, {
+      const minified = await minify(finalOutput, {
         compress: true,
         mangle: true,
         format: {
@@ -229,6 +255,7 @@ async function watchFiles() {
 
 // Check for --watch flag
 const watchMode = process.argv.includes('--watch');
+const productionMode = process.argv.includes('--production') || process.env.NODE_ENV === 'production';
 
 // Execute
 (async () => {
