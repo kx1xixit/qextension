@@ -184,29 +184,21 @@ async function buildExtension() {
       return Array.from(found);
     }
 
-    const extracted = extractStrings(output);
+    const extracted = extractStrings(output + '})(Scratch);');
     console.log(`[I18N] Found ${extracted.length} translatable string(s)`);
 
     // Target languages to translate into
     let targetLangs = ['es', 'fr', 'de']; // default fallback
 
-    // Try to load from manifest.json first
-    try {
-      const manifestPath = path.join(SRC_DIR, 'manifest.json');
-      if (fs.existsSync(manifestPath)) {
-        const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        if (manifestData.locales && Array.isArray(manifestData.locales)) {
-          // Validate that all entries are strings
-          if (manifestData.locales.every(lang => typeof lang === 'string')) {
-            targetLangs = manifestData.locales;
-            console.log(`[I18N] Loaded target languages from manifest.json: [${targetLangs.join(', ')}]`);
-          } else {
-            console.warn('[I18N] manifest.json "locales" contains non-string values, using fallback');
-          }
-        }
+    // Try to load from manifest (already parsed earlier)
+    if (manifest.locales && Array.isArray(manifest.locales)) {
+      // Validate that all entries are strings
+      if (manifest.locales.every(lang => typeof lang === 'string')) {
+        targetLangs = manifest.locales;
+        console.log(`[I18N] Loaded target languages from manifest.json: [${targetLangs.join(', ')}]`);
+      } else {
+        console.warn('[I18N] manifest.json "locales" contains non-string values, using fallback');
       }
-    } catch (err) {
-      console.warn(`[I18N] Failed to read locales from manifest.json: ${err.message}, using fallback`);
     }
 
     // Fall back to environment variable if manifest didn't provide locales
