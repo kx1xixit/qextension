@@ -281,12 +281,15 @@ async function buildExtension() {
 
     const translationsByLocale = {};
 
-    // Populate translationsByLocale from cache first
+    // Populate translationsByLocale from cache, but only for strings actually used in this build
     for (const lang of targetLangs) translationsByLocale[lang] = {};
-    for (const [orig, langs] of Object.entries(cache)) {
-      for (const [lang, val] of Object.entries(langs)) {
-        translationsByLocale[lang] = translationsByLocale[lang] || {};
-        translationsByLocale[lang][orig] = val;
+    for (const orig of extracted) {
+      if (cache[orig]) {
+        for (const lang of targetLangs) {
+          if (cache[orig][lang]) {
+            translationsByLocale[lang][orig] = cache[orig][lang];
+          }
+        }
       }
     }
 
@@ -330,9 +333,28 @@ async function buildExtension() {
     translationsCode += `  // NOTE: This template requires the TurboWarp runtime's Scratch.translate API.\n`;
     translationsCode += `  // Defensive fallback: ensure Scratch.translate exists as a callable function\n`;
     translationsCode += `  if (typeof Scratch.translate !== 'function') {\n`;
-    translationsCode += `    Scratch.translate = function(s) { return s; };\n`;
+    translationsCode += `    Scratch.translate = function(arg) {\n`;
+    translationsCode += `      // Handle object-form calls like Scratch.translate({default: "..."})\n`;
+    translationsCode += `      if (arg && typeof arg === 'object') {\n`;
+    translationsCode += `        return String(arg.default || arg.message || '');\n`;
+    translationsCode += `      }\n`;
+    translationsCode += `      // Coerce to string for non-object inputs\n`;
+    translationsCode += `      return arg == null ? '' : String(arg);\n`;
+    translationsCode += `    };\n`;
     translationsCode += `  }\n`;
-    translationsCode += `  Scratch.translate.locales = ${localesObj};\n`;
+    translationsCode += `  // Merge new locales into existing ones to preserve shared global translations\n`;
+    translationsCode += `  const newLocales = ${localesObj};\n`;
+    translationsCode += `  const existingLocales = Scratch.translate.locales || {};\n`;
+    translationsCode += `  const mergedLocales = {};\n`;
+    translationsCode += `  // Copy existing locales\n`;
+    translationsCode += `  for (const lang in existingLocales) {\n`;
+    translationsCode += `    mergedLocales[lang] = Object.assign({}, existingLocales[lang]);\n`;
+    translationsCode += `  }\n`;
+    translationsCode += `  // Merge in new locales\n`;
+    translationsCode += `  for (const lang in newLocales) {\n`;
+    translationsCode += `    mergedLocales[lang] = Object.assign(mergedLocales[lang] || {}, newLocales[lang]);\n`;
+    translationsCode += `  }\n`;
+    translationsCode += `  Scratch.translate.locales = mergedLocales;\n`;
     translationsCode += `  if (typeof Scratch.translate.setup !== 'function') {\n`;
     translationsCode += `    Scratch.translate.setup = function(config) {\n`;
     translationsCode += `      if (config && config.locales) {\n`;
