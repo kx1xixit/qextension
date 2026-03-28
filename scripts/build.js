@@ -3,7 +3,7 @@
 import fs from 'fs';
 import fetch from 'node-fetch';
 import { parse } from '@babel/parser';
-import * as traverse from '@babel/traverse';
+import traverse from '@babel/traverse';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -93,6 +93,10 @@ async function buildExtension() {
     output += '(function (Scratch) {\n';
     output += '  "use strict";\n\n';
 
+    // Placeholder for translations - will be injected here after extraction
+    const TRANSLATION_MARKER = '  // [[TRANSLATIONS_INJECTION_POINT]]\n\n';
+    output += TRANSLATION_MARKER;
+
     // Concatenate all source files
     sourceFiles.forEach(file => {
       const filename = path.basename(file);
@@ -141,7 +145,7 @@ async function buildExtension() {
       const found = new Set();
       try {
         const ast = parse(src, { sourceType: 'module', plugins: ['jsx'] });
-        traverse.default(ast, {
+        traverse(ast, {
           CallExpression(path) {
             const callee = path.node.callee;
             // match Scratch.translate(...)
@@ -189,18 +193,43 @@ async function buildExtension() {
     // Fetch translations for missing entries using LibreTranslate
     async function fetchTranslation(text, target) {
       const url = 'https://libretranslate.de/translate';
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      // Escape placeholders: replace [PLACEHOLDER] with __PH0__, __PH1__, etc.
+      const placeholderMap = [];
+      const placeholderRegex = /\[([^\]]+)\]/g;
+      let escapedText = text.replace(placeholderRegex, (match) => {
+        const token = `__PH${placeholderMap.length}__`;
+        placeholderMap.push(match);
+        return token;
+      });
+
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ q: text, source: 'en', target, format: 'text' }),
+          body: JSON.stringify({ q: escapedText, source: 'en', target, format: 'text' }),
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
-        return json.translatedText || text;
+        let translatedText = json.translatedText || null;
+
+        // Restore original placeholders
+        if (translatedText !== null) {
+          placeholderMap.forEach((original, index) => {
+            const token = `__PH${index}__`;
+            translatedText = translatedText.replace(new RegExp(token, 'g'), original);
+          });
+        }
+
+        return translatedText;
       } catch (err) {
+        clearTimeout(timeout);
         console.warn(`[I18N] Failed to translate "${text}" -> ${target}: ${err.message}`);
-        return text; // fallback to original
+        return null; // clear failure sentinel
       }
     }
 
@@ -224,10 +253,13 @@ async function buildExtension() {
         for (const lang of langs) {
           // eslint-disable-next-line no-await-in-loop
           const translated = await fetchTranslation(orig, lang);
-          cache[orig] = cache[orig] || {};
-          cache[orig][lang] = translated;
-          translationsByLocale[lang] = translationsByLocale[lang] || {};
-          translationsByLocale[lang][orig] = translated;
+          // Only cache successful translations (skip null sentinel)
+          if (translated !== null) {
+            cache[orig] = cache[orig] || {};
+            cache[orig][lang] = translated;
+            translationsByLocale[lang] = translationsByLocale[lang] || {};
+            translationsByLocale[lang][orig] = translated;
+          }
         }
       }
 
@@ -242,18 +274,23 @@ async function buildExtension() {
       console.log('[I18N] All translations loaded from cache');
     }
 
-    // Inject runtime setup before closing IIFE
+    // Inject translations at the prologue marker (before extension code runs)
     // Build locales object: { es: { "Hello": "Hola" }, fr: { ... } }
     const localesObj = JSON.stringify(translationsByLocale, null, 2);
-    output += `\n  // Injected translations\n`;
-    output += `  Scratch.translate = Scratch.translate || {};\n`;
-    output += `  if (typeof Scratch.translate.setup === 'function') {\n`;
-    output += `    Scratch.translate.setup({ locales: ${localesObj} });\n`;
-    output += `  } else {\n`;
-    output += `    // Provide a minimal setup fallback\n`;
-    output += `    Scratch.translate.setup = function() { /* translations attached */ };\n`;
-    output += `    Scratch.translate.setup({ locales: ${localesObj} });\n`;
-    output += `  }\n\n`;
+    let translationsCode = `  // Injected translations (available before extension registration)\n`;
+    translationsCode += `  Scratch.translate = Scratch.translate || {};\n`;
+    translationsCode += `  Scratch.translate.locales = ${localesObj};\n`;
+    translationsCode += `  if (typeof Scratch.translate.setup !== 'function') {\n`;
+    translationsCode += `    Scratch.translate.setup = function(config) {\n`;
+    translationsCode += `      if (config && config.locales) {\n`;
+    translationsCode += `        Scratch.translate.locales = config.locales;\n`;
+    translationsCode += `      }\n`;
+    translationsCode += `    };\n`;
+    translationsCode += `  }\n`;
+    translationsCode += `  Scratch.translate.setup({ locales: Scratch.translate.locales });\n\n`;
+
+    // Replace the marker with the translations code
+    output = output.replace(TRANSLATION_MARKER, translationsCode);
 
     // Close IIFE
     output += '})(Scratch);\n';
@@ -377,7 +414,7 @@ async function watchFiles() {
   console.log('Watching for changes in', SRC_DIR);
 
   const watcher = chokidar.watch(SRC_DIR, {
-    ignored: /(^|[\\])\./,
+    ignored: /(^|[\\/])\./,
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 100,
