@@ -160,8 +160,20 @@ async function buildExtension() {
                 (callee.property.type === 'StringLiteral' && callee.property.value === 'translate'))
             ) {
               const args = path.node.arguments;
-              if (args && args.length > 0 && args[0].type === 'StringLiteral') {
-                found.add(args[0].value);
+              if (args && args.length > 0) {
+                if (args[0].type === 'StringLiteral') {
+                  found.add(args[0].value);
+                } else if (args[0].type === 'ObjectExpression') {
+                  // Handle object argument: extract string values from properties
+                  const objArg = args[0];
+                  if (objArg.properties) {
+                    objArg.properties.forEach(prop => {
+                      if (prop.value && prop.value.type === 'StringLiteral') {
+                        found.add(prop.value.value);
+                      }
+                    });
+                  }
+                }
               }
             }
           },
@@ -176,7 +188,37 @@ async function buildExtension() {
     console.log(`[I18N] Found ${extracted.length} translatable string(s)`);
 
     // Target languages to translate into
-    const targetLangs = ['es', 'fr', 'de'];
+    let targetLangs = ['es', 'fr', 'de']; // default fallback
+
+    // Try to load from manifest.json first
+    try {
+      const manifestPath = path.join(SRC_DIR, 'manifest.json');
+      if (fs.existsSync(manifestPath)) {
+        const manifestData = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        if (manifestData.locales && Array.isArray(manifestData.locales)) {
+          // Validate that all entries are strings
+          if (manifestData.locales.every(lang => typeof lang === 'string')) {
+            targetLangs = manifestData.locales;
+            console.log(`[I18N] Loaded target languages from manifest.json: [${targetLangs.join(', ')}]`);
+          } else {
+            console.warn('[I18N] manifest.json "locales" contains non-string values, using fallback');
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[I18N] Failed to read locales from manifest.json: ${err.message}, using fallback`);
+    }
+
+    // Fall back to environment variable if manifest didn't provide locales
+    if (targetLangs.length === 3 && targetLangs[0] === 'es' && targetLangs[1] === 'fr' && targetLangs[2] === 'de') {
+      if (process.env.TARGET_LANGS) {
+        const envLangs = process.env.TARGET_LANGS.split(',').map(lang => lang.trim()).filter(lang => lang);
+        if (envLangs.length > 0) {
+          targetLangs = envLangs;
+          console.log(`[I18N] Loaded target languages from TARGET_LANGS env: [${targetLangs.join(', ')}]`);
+        }
+      }
+    }
 
     // Determine which translations are missing in cache
     const toTranslate = {};
@@ -189,6 +231,10 @@ async function buildExtension() {
         }
       }
     }
+
+    // Helper: delay function to avoid rate limiting
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const TRANSLATION_DELAY_MS = parseInt(process.env.TRANSLATION_DELAY_MS || '100', 10);
 
     // Fetch translations for missing entries using LibreTranslate
     async function fetchTranslation(text, target) {
@@ -260,6 +306,9 @@ async function buildExtension() {
             translationsByLocale[lang] = translationsByLocale[lang] || {};
             translationsByLocale[lang][orig] = translated;
           }
+          // Add delay to avoid rate limiting
+          // eslint-disable-next-line no-await-in-loop
+          await delay(TRANSLATION_DELAY_MS);
         }
       }
 
@@ -278,7 +327,11 @@ async function buildExtension() {
     // Build locales object: { es: { "Hello": "Hola" }, fr: { ... } }
     const localesObj = JSON.stringify(translationsByLocale, null, 2);
     let translationsCode = `  // Injected translations (available before extension registration)\n`;
-    translationsCode += `  Scratch.translate = Scratch.translate || {};\n`;
+    translationsCode += `  // NOTE: This template requires the TurboWarp runtime's Scratch.translate API.\n`;
+    translationsCode += `  // Defensive fallback: ensure Scratch.translate exists as a callable function\n`;
+    translationsCode += `  if (typeof Scratch.translate !== 'function') {\n`;
+    translationsCode += `    Scratch.translate = function(s) { return s; };\n`;
+    translationsCode += `  }\n`;
     translationsCode += `  Scratch.translate.locales = ${localesObj};\n`;
     translationsCode += `  if (typeof Scratch.translate.setup !== 'function') {\n`;
     translationsCode += `    Scratch.translate.setup = function(config) {\n`;
@@ -364,17 +417,17 @@ async function buildExtension() {
         console.log(`[MINIFY] Minified output created: ${OUTPUT_MIN_FILE} (${minSize} KB)`);
       }
 
-    } catch (_err) {
-      if (_err.code === 'ERR_MODULE_NOT_FOUND') {
+    } catch (err) {
+      if (err.code === 'ERR_MODULE_NOT_FOUND') {
         console.warn('        (Skipping minification: "terser" not found)');
       } else {
-        console.warn('[MINIFY] Minification failed:', _err);
+        console.warn('[MINIFY] Minification failed:', err);
       }
     }
 
     return true;
-  } catch (_err) {
-    console.error('✗ Build failed:', _err.message);
+  } catch (err) {
+    console.error('✗ Build failed:', err.message);
     return false;
   }
 }
