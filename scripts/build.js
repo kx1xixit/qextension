@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import fs from 'fs';
+import fetch from 'node-fetch';
+import { parse } from '@babel/parser';
+import * as traverse from '@babel/traverse';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -117,6 +120,140 @@ async function buildExtension() {
       output += indentedContent;
       output += '\n\n';
     });
+
+    // --- I18N: extract strings and inject translations ---
+    // Parse concatenated output to find Scratch.translate("...") calls
+    const translationsCachePath = path.join(__dirname, '..', 'translations-cache.json');
+    let cache = {};
+    try {
+      if (fs.existsSync(translationsCachePath)) {
+        const raw = fs.readFileSync(translationsCachePath, 'utf8');
+        cache = JSON.parse(raw || '{}');
+        console.log('[I18N] Loaded translations cache');
+      }
+    } catch (err) {
+      console.warn('[I18N] Failed to load cache, starting fresh:', err.message);
+      cache = {};
+    }
+
+    // Helper: collect unique string literals from Scratch.translate calls
+    function extractStrings(src) {
+      const found = new Set();
+      try {
+        const ast = parse(src, { sourceType: 'module', plugins: ['jsx'] });
+        traverse.default(ast, {
+          CallExpression(path) {
+            const callee = path.node.callee;
+            // match Scratch.translate(...)
+            if (
+              callee &&
+              callee.type === 'MemberExpression' &&
+              callee.object &&
+              callee.object.type === 'Identifier' &&
+              callee.object.name === 'Scratch' &&
+              callee.property &&
+              ((callee.property.type === 'Identifier' && callee.property.name === 'translate') ||
+                (callee.property.type === 'StringLiteral' && callee.property.value === 'translate'))
+            ) {
+              const args = path.node.arguments;
+              if (args && args.length > 0 && args[0].type === 'StringLiteral') {
+                found.add(args[0].value);
+              }
+            }
+          },
+        });
+      } catch (err) {
+        console.warn('[I18N] AST parse failed:', err.message);
+      }
+      return Array.from(found);
+    }
+
+    const extracted = extractStrings(output);
+    console.log(`[I18N] Found ${extracted.length} translatable string(s)`);
+
+    // Target languages to translate into
+    const targetLangs = ['es', 'fr', 'de'];
+
+    // Determine which translations are missing in cache
+    const toTranslate = {};
+    for (const str of extracted) {
+      if (!cache[str]) cache[str] = {};
+      for (const lang of targetLangs) {
+        if (!cache[str][lang]) {
+          toTranslate[str] = toTranslate[str] || [];
+          toTranslate[str].push(lang);
+        }
+      }
+    }
+
+    // Fetch translations for missing entries using LibreTranslate
+    async function fetchTranslation(text, target) {
+      const url = 'https://libretranslate.de/translate';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: text, source: 'en', target, format: 'text' }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        return json.translatedText || text;
+      } catch (err) {
+        console.warn(`[I18N] Failed to translate "${text}" -> ${target}: ${err.message}`);
+        return text; // fallback to original
+      }
+    }
+
+    const translationsByLocale = {};
+
+    // Populate translationsByLocale from cache first
+    for (const lang of targetLangs) translationsByLocale[lang] = {};
+    for (const [orig, langs] of Object.entries(cache)) {
+      for (const [lang, val] of Object.entries(langs)) {
+        translationsByLocale[lang] = translationsByLocale[lang] || {};
+        translationsByLocale[lang][orig] = val;
+      }
+    }
+
+    // If there are strings to translate, call API for missing ones
+    const missingEntries = Object.keys(toTranslate);
+    if (missingEntries.length > 0) {
+      console.log(`[I18N] Translating ${missingEntries.length} string(s) (missing in cache)`);
+      for (const orig of missingEntries) {
+        const langs = toTranslate[orig];
+        for (const lang of langs) {
+          // eslint-disable-next-line no-await-in-loop
+          const translated = await fetchTranslation(orig, lang);
+          cache[orig] = cache[orig] || {};
+          cache[orig][lang] = translated;
+          translationsByLocale[lang] = translationsByLocale[lang] || {};
+          translationsByLocale[lang][orig] = translated;
+        }
+      }
+
+      // Write updated cache
+      try {
+        fs.writeFileSync(translationsCachePath, JSON.stringify(cache, null, 2), 'utf8');
+        console.log('[I18N] Updated translations cache');
+      } catch (err) {
+        console.warn('[I18N] Failed to write cache:', err.message);
+      }
+    } else {
+      console.log('[I18N] All translations loaded from cache');
+    }
+
+    // Inject runtime setup before closing IIFE
+    // Build locales object: { es: { "Hello": "Hola" }, fr: { ... } }
+    const localesObj = JSON.stringify(translationsByLocale, null, 2);
+    output += `\n  // Injected translations\n`;
+    output += `  Scratch.translate = Scratch.translate || {};\n`;
+    output += `  if (typeof Scratch.translate.setup === 'function') {\n`;
+    output += `    Scratch.translate.setup({ locales: ${localesObj} });\n`;
+    output += `  } else {\n`;
+    output += `    // Provide a minimal setup fallback\n`;
+    output += `    Scratch.translate.setup = function() { /* translations attached */ };\n`;
+    output += `    Scratch.translate.setup({ locales: ${localesObj} });\n`;
+    output += `  }\n\n`;
 
     // Close IIFE
     output += '})(Scratch);\n';
