@@ -37,6 +37,13 @@ export default [
         Scratch: 'readonly',
       },
     },
+    // Register local plugin and enable rule
+    plugins: {
+      'local-rules': await import('./eslint-rules/index.js'),
+    },
+    rules: {
+      'local-rules/require-scratch-translate-getinfo': 'error',
+    },
   },
   {
     files: ['scripts/**/*.js', 'eslint.config.mjs'],
