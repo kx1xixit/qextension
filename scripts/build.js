@@ -29,7 +29,7 @@ function getManifest() {
   if (fs.existsSync(manifestPath)) {
     try {
       return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    } catch (err) {
+    } catch (_err) {
       console.warn('Warning: Could not parse manifest.json');
       return {};
     }
@@ -189,17 +189,18 @@ async function buildExtension() {
         const minSize = (minified.code.length / 1024).toFixed(2);
         console.log(`[MINIFY] Minified output created: ${OUTPUT_MIN_FILE} (${minSize} KB)`);
       }
-    } catch (err) {
-      if (err.code === 'ERR_MODULE_NOT_FOUND') {
+
+    } catch (_err) {
+      if (_err.code === 'ERR_MODULE_NOT_FOUND') {
         console.warn('        (Skipping minification: "terser" not found)');
       } else {
-        console.warn('[MINIFY] Minification failed:', err);
+        console.warn('[MINIFY] Minification failed:', _err);
       }
     }
 
     return true;
-  } catch (err) {
-    console.error('✗ Build failed:', err.message);
+  } catch (_err) {
+    console.error('✗ Build failed:', _err.message);
     return false;
   }
 }
@@ -231,7 +232,7 @@ async function watchFiles() {
   let chokidar;
   try {
     chokidar = (await import('chokidar')).default;
-  } catch (err) {
+  } catch (_err) {
     console.error('Watch mode requires chokidar. Install it with: npm install --save-dev chokidar');
     process.exit(1);
   }
@@ -239,7 +240,7 @@ async function watchFiles() {
   console.log('Watching for changes in', SRC_DIR);
 
   const watcher = chokidar.watch(SRC_DIR, {
-    ignored: /(^|[\/\\])\./,
+    ignored: /(^|[\\])\./,
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 100,
